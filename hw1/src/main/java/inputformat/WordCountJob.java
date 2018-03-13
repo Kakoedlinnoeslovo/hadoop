@@ -45,7 +45,7 @@ public class WordCountJob extends Configured implements Tool {
         }
     }
 
-    public static class WordCounterReducer extends Reducer<Text, LongWritable, Text, IntWritable> {
+    public class WordCounterReducer extends Reducer<Text, LongWritable, Text, IntWritable> {
         protected void reduce(Text word, Iterable<IntWritable> nums, Context context) throws IOException, InterruptedException {
             int sum = 0;
             for(IntWritable ignored : nums) {
@@ -59,8 +59,8 @@ public class WordCountJob extends Configured implements Tool {
     private Job getJobConf(String input, String output) throws IOException {
         Job job = Job.getInstance(getConf());
 
-        job.setJarByClass(WordCountJob.class);
-        job.setJobName(WordCountJob.class.getCanonicalName());
+        job.setJarByClass(inputformat.WordCountJob.class);
+        job.setJobName(inputformat.WordCountJob.class.getCanonicalName());
 
         job.setInputFormatClass(DocumentInpFormat2.class);
         DocumentInpFormat2.addInputPath(job, new Path(input));
