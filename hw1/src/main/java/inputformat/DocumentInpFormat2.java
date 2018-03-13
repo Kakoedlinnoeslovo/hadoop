@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DocumentInpFormat2 extends FileInputFormat<LongWritable, Text> {
-    Integer maxDoc;
+    private Integer maxDoc = 5000000;
     Configuration conf;
 
     @Override
