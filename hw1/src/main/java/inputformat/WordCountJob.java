@@ -1,3 +1,5 @@
+package inputformat;
+
 import inputformat.DocumentInpFormat2;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
