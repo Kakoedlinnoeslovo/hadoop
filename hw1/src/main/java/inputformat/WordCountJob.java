@@ -1,5 +1,4 @@
-package inputformat;
-
+import inputformat.DocumentInpFormat2;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -11,41 +10,37 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import java.util.stream.Collectors;
 
 public class WordCountJob extends Configured implements Tool {
-    public class WordCounterMapper extends Mapper<LongWritable, Text, Text, LongWritable> {
-        private final LongWritable one = new LongWritable(1);
-        private final Pattern wordRegPattern = Pattern.compile("\\p{L}+");
-        private HashSet<String> words = new HashSet<String>();
-
+    public static class WordCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+        static final IntWritable one = new IntWritable(1);
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            words.clear();
+//            Set<String> uniqueWords = Pattern.compile("\\p{L}+")
+//                    .matcher(value.toString())
+//                    .results()
+//                    .map(MatchResult::group).collect(Collectors.toSet());
 
-            Matcher matcher = wordRegPattern.matcher(value.toString());
-
-            while (matcher.find()) {
-                String word = matcher.group().toLowerCase();
-                if (word.length() > 0) {
-                    words.add(word);
-                }
+            Set<String> allMatches = new HashSet<>();
+            Matcher m = Pattern.compile("\\p{L}+").matcher(value.toString().toLowerCase());
+            while (m.find()) {
+                allMatches.add(m.group());
             }
-
-            for (String word : words) {
+            for(String word: allMatches)
                 context.write(new Text(word), one);
-            }
         }
     }
 
-    public class WordCounterReducer extends Reducer<Text, LongWritable, Text, IntWritable> {
+    public static class WordCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+        @Override
         protected void reduce(Text word, Iterable<IntWritable> nums, Context context) throws IOException, InterruptedException {
             int sum = 0;
             for(IntWritable ignored : nums) {
@@ -59,15 +54,15 @@ public class WordCountJob extends Configured implements Tool {
     private Job getJobConf(String input, String output) throws IOException {
         Job job = Job.getInstance(getConf());
 
-        job.setJarByClass(inputformat.WordCountJob.class);
-        job.setJobName(inputformat.WordCountJob.class.getCanonicalName());
+        job.setJarByClass(WordCountJob.class);
+        job.setJobName(WordCountJob.class.getCanonicalName());
 
         job.setInputFormatClass(DocumentInpFormat2.class);
         DocumentInpFormat2.addInputPath(job, new Path(input));
         FileOutputFormat.setOutputPath(job, new Path(output));
 
-        job.setMapperClass(WordCounterMapper.class);
-        job.setReducerClass(WordCounterReducer.class);
+        job.setMapperClass(WordCountMapper.class);
+        job.setReducerClass(WordCountReducer.class);
 
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
