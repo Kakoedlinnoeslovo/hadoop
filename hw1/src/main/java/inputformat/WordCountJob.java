@@ -46,7 +46,6 @@ public class WordCountJob extends Configured implements Tool {
     }
 
     public static class WordCounterReducer extends Reducer<Text, LongWritable, Text, IntWritable> {
-        @Override
         protected void reduce(Text word, Iterable<IntWritable> nums, Context context) throws IOException, InterruptedException {
             int sum = 0;
             for(IntWritable ignored : nums) {
