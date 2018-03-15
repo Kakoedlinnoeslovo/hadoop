@@ -26,7 +26,7 @@ import java.util.zip.Inflater;
 public class DocumentReader  extends RecordReader<LongWritable, Text> {
     FSDataInputStream input_file;
     Text value;
-    List<Integer> index_array;
+    List<Integer> indexArray;
     byte[] input_arr;
     byte[] result;
     int doc_num;
@@ -54,18 +54,16 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     private void prepare_index(FileSplit fsplit, Path path, FileSystem fs, FSDataInputStream input_index) throws IOException {
         IndexReader reader = new IndexReader();
 
-        index_array = reader.ReadIndex(input_index);
+        indexArray = reader.ReadIndex(input_index);
         start_file = fsplit.getStart();
 
         long offset = 0;
         while (doc_num < start_file) {
-            offset += index_array.get(doc_num);
+            offset += indexArray.get(doc_num);
             doc_num++;
         }
         n_files = fsplit.getLength();
 
-        if (max_doc < 0)
-            throw new IOException("max doc error");
 
         input_file = fs.open(path);
         input_file.seek(offset);
@@ -78,16 +76,14 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     public boolean nextKeyValue() throws IOException {
         if (doc_num >= n_files)
             return false;
-
-//            System.out.println("Doc num:" + doc_num + ", N files:" + n_files);
         try {
 
-            input_file.readFully(input_arr, 0, index_array.get(doc_num));
+            input_file.readFully(input_arr, 0, indexArray.get(doc_num));
         } catch (IOException e) {
             e.printStackTrace();
         }
         Inflater decompresser = new Inflater();
-        decompresser.setInput(input_arr, 0, index_array.get(doc_num));
+        decompresser.setInput(input_arr, 0, indexArray.get(doc_num));
         int res_len = 0;
         try {
             if ((res_len = decompresser.inflate(result)) > 150000 * 5)
@@ -103,7 +99,7 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
 
     @Override
     public LongWritable getCurrentKey() {
-        return new LongWritable(index_array.get(doc_num - 1));
+        return new LongWritable(indexArray.get(doc_num - 1));
     }
 
     @Override

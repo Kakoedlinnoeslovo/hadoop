@@ -2,6 +2,9 @@ package InpFormat;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -27,6 +30,4 @@ public class IndexReader {
         }
         return al;
     }
-
-
 }

@@ -42,7 +42,6 @@ public class WordCountJob extends Configured implements Tool {
             for(IntWritable ignored : nums) {
                 sum += 1;
             }
-            // produce pairs of "word" <-> amount
             context.write(word, new IntWritable(sum));
         }
     }

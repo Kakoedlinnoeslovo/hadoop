@@ -25,7 +25,12 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
-    private long max_doc = 5000000;
+
+    private static final String BYTES_PER_MAP = "mapreduce.input.doc.bytes_per_map";
+
+    private static long getNumBytesPerSplit(Configuration conf) {
+        return  conf.getLong(BYTES_PER_MAP, 666666666);
+    }
 
     @Override
     public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
@@ -42,6 +47,7 @@ public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
 
 
         List<InputSplit> splits = new ArrayList<>();
+        long bytes_num_for_split = getNumBytesPerSplit(context.getConfiguration());
 
         for (FileStatus status : listStatus(context)) {
             Path path = status.getPath();
@@ -64,10 +70,7 @@ public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
             long offset = 0;
             for (Integer cur : al) {
                 split_size += cur;
-                if (cur > max_doc)
-                    max_doc = cur;
                 cur_split++;
-                long bytes_num_for_split = getNumBytesPerSplit (context.getConfiguration());
                 if (split_size > bytes_num_for_split) {
                     splits.add(new FileSplit(path, offset, cur_split, null));
                     offset += cur_split;
@@ -78,11 +81,6 @@ public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
             splits.add(new FileSplit(path, offset, cur_split, null));
         }
         return splits;
-    }
-    public static final String BYTES_PER_MAP = "mapreduce.input.doc.bytes_per_map";
-
-    public static long getNumBytesPerSplit(Configuration conf) {
-        return  conf.getLong(BYTES_PER_MAP, 134217728);
     }
 
 
