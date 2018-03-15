@@ -21,12 +21,12 @@ import java.util.regex.Pattern;
 public class WordCountJob extends Configured implements Tool {
     public static class WordCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
         static final IntWritable one = new IntWritable(1);
+        static final Pattern wordEpr = Pattern.compile("\\p{L}+");
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
             Set<String> allMatches = new HashSet<>();
-            Matcher m = Pattern.compile("\\p{L}+")
-                    .matcher(value.toString().toLowerCase());
+            Matcher m = wordEpr.matcher(value.toString().toLowerCase());
             while (m.find()) {
                 allMatches.add(m.group());
             }
