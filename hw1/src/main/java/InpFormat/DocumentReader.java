@@ -33,7 +33,7 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     long maxDocLength = 5000000;
     byte[] inputArray = new byte[(int) maxDocLength];
     byte[] result = new byte[(int) maxDocLength ];
-    //static long maxBufferSize = 150000*10;
+    static long maxBufferSize = 150000*10;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -80,12 +80,12 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
         Inflater decompresser = new Inflater();
         decompresser.setInput(inputArray, 0, indexArray.get(pos));
         int res_len = 0;
-//        try {
-//            if ((res_len = decompresser.inflate(result)) > maxBufferSize)
-//                System.out.println("decompress error");
-//        } catch (DataFormatException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            if ((res_len = decompresser.inflate(result)) > maxBufferSize)
+                System.out.println("decompress error");
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        }
         decompresser.end();
         value = new Text (new String(result, 0, res_len, "UTF-8"));
         pos++;
