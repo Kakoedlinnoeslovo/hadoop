@@ -27,7 +27,7 @@ public class DocumentInpFormat2 extends FileInputFormat<LongWritable, Text> {
     @Override
     public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
             throws IOException {
-        //System.out.println("Here RecordReader I AM HERE!!!");
+        System.out.println("Here RecordReader I AM HERE!!!");
         DocReader2 reader = new DocReader2();
         reader.initialize(split, context);
         return reader;
