@@ -52,7 +52,10 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     }
 
     private void prepare_index(FileSplit fsplit, Path path, FileSystem fs, FSDataInputStream input_index) throws IOException {
-        index_array = read_index(input_index);
+        IndexReader reader = new IndexReader();
+        long sizeIndex = fs.getFileStatus(path).getLen() / 4l;
+
+        index_array = reader.ReadIndex(input_index, sizeIndex);
         start_file = fsplit.getStart();
 
         long offset = 0;
@@ -70,22 +73,6 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
 
         input_arr = new byte[(int) max_doc];
         result = new byte[(int) max_doc * 20];//?
-    }
-
-    private static List<Integer> read_index(FSDataInputStream index_file) throws IOException {
-        int max_doc = 0;
-        LittleEndianDataInputStream in = new LittleEndianDataInputStream(index_file);
-        List<Integer> al = new ArrayList<>();
-        try {
-            while (true){
-                int val = in.readInt();
-                if (val > max_doc)
-                    max_doc = val;
-                al.add(val);
-            }
-        } catch (EOFException ignored) {
-        }
-        return al;
     }
 
     @Override

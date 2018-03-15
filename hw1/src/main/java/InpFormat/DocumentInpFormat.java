@@ -36,37 +36,29 @@ public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
         return reader;
     }
 
-    private static List<Integer> read_index(FSDataInputStream index_file) throws IOException {
-        int max_doc = 0;
-        LittleEndianDataInputStream in = new LittleEndianDataInputStream(index_file);
-        List<Integer> al = new ArrayList<>();
-        try {
-            while (true){
-                int val = in.readInt();
-                if (val > max_doc)
-                    max_doc = val;
-                al.add(val);
-            }
-        } catch (EOFException ignored) {
-        }
-        return al;
-    }
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
+
+
         List<InputSplit> splits = new ArrayList<>();
 
         for (FileStatus status : listStatus(context)) {
             Path path = status.getPath();
-            String index_file = path.getName();
-            if (index_file.substring(index_file.length() - 4).equals(".idx")) {
+
+            if (!path.toString().endsWith(".pkz")) {
                 continue;
-            } else {
-                index_file = index_file + ".idx";
             }
+
+            Path idxpath = path.suffix(".idx");
+
+
+
             FileSystem fs = path.getFileSystem(context.getConfiguration());
-            FSDataInputStream input_index = fs.open(new Path(path.getParent(), index_file));
-            List<Integer> al = read_index(input_index);
+            FSDataInputStream inputIndex = fs.open(new Path(path.getParent(), idxpath));
+            IndexReader indexreader = new IndexReader();
+            long sizeIndex = fs.getFileStatus(idxpath).getLen() / 4l;
+            List<Integer> al = indexreader.ReadIndex(inputIndex, sizeIndex);
 
             int cur_split = 0;
             long split_size = 0;
