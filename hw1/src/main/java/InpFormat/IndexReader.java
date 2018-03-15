@@ -7,18 +7,23 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.hadoop.fs.FileSystem;
 
 
 
 public class IndexReader {
 
-    public List<Integer> ReadIndex(FSDataInputStream indexFile, long size) throws IOException {
+    public  List<Integer> ReadIndex(FSDataInputStream indexFile) throws IOException {
+        int max_doc = 0;
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(indexFile);
-        List<Integer> al = new ArrayList<>((int)size);
-
-        for (int i = 0; i < size; i++) {
-            al.add(in.readInt());
+        List<Integer> al = new ArrayList<>();
+        try {
+            while (true){
+                int val = in.readInt();
+                if (val > max_doc)
+                    max_doc = val;
+                al.add(val);
+            }
+        } catch (EOFException ignored) {
         }
         return al;
     }

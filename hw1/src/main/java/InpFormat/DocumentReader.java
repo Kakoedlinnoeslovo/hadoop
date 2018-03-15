@@ -53,9 +53,8 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
 
     private void prepare_index(FileSplit fsplit, Path path, FileSystem fs, FSDataInputStream input_index) throws IOException {
         IndexReader reader = new IndexReader();
-        long sizeIndex = fs.getFileStatus(path).getLen() / 4l;
 
-        index_array = reader.ReadIndex(input_index, sizeIndex);
+        index_array = reader.ReadIndex(input_index);
         start_file = fsplit.getStart();
 
         long offset = 0;

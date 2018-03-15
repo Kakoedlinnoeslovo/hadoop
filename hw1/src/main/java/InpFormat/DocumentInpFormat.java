@@ -57,8 +57,7 @@ public class DocumentInpFormat extends FileInputFormat<LongWritable, Text> {
             FileSystem fs = path.getFileSystem(context.getConfiguration());
             FSDataInputStream inputIndex = fs.open(new Path(path.getParent(), idxpath));
             IndexReader indexreader = new IndexReader();
-            long sizeIndex = fs.getFileStatus(idxpath).getLen() / 4l;
-            List<Integer> al = indexreader.ReadIndex(inputIndex, sizeIndex);
+            List<Integer> al = indexreader.ReadIndex(inputIndex);
 
             int cur_split = 0;
             long split_size = 0;
