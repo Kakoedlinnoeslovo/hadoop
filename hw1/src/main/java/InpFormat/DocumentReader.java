@@ -32,7 +32,7 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     int doc_num;
     long n_files;
     long start_file;
-    long max_doc = 50000;
+    long max_doc = 5000000;
 
 
     @Override
