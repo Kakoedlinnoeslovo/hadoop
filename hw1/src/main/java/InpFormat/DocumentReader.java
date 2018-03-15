@@ -29,11 +29,11 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     List<Integer> indexArray;
     byte[] input_arr;
     byte[] result;
-    int doc_num;
-    long n_files;
+    int pos;
+    long end;
     long start_file;
     long max_doc = 5000000;
-
+    static long maxBufferSize = 150000*10;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -58,11 +58,11 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
         start_file = fsplit.getStart();
 
         long offset = 0;
-        while (doc_num < start_file) {
-            offset += indexArray.get(doc_num);
-            doc_num++;
+        while (pos < start_file) {
+            offset += indexArray.get(pos);
+            pos++;
         }
-        n_files = fsplit.getLength();
+        end = fsplit.getLength();
 
 
         input_file = fs.open(path);
@@ -74,32 +74,33 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
 
     @Override
     public boolean nextKeyValue() throws IOException {
-        if (doc_num >= n_files)
+        if (pos >= end)
             return false;
         try {
 
-            input_file.readFully(input_arr, 0, indexArray.get(doc_num));
+            input_file.readFully(input_arr, 0, indexArray.get(pos));
         } catch (IOException e) {
             e.printStackTrace();
         }
         Inflater decompresser = new Inflater();
-        decompresser.setInput(input_arr, 0, indexArray.get(doc_num));
+        decompresser.setInput(input_arr, 0, indexArray.get(pos));
         int res_len = 0;
         try {
-            if ((res_len = decompresser.inflate(result)) > 150000 * 5)
+            if ((res_len = decompresser.inflate(result)) > maxBufferSize)
                 System.out.println("decompress error");
         } catch (DataFormatException e) {
             e.printStackTrace();
         }
         decompresser.end();
         value = new Text (new String(result, 0, res_len, "UTF-8"));
-        doc_num++;
+        pos++;
         return true;
     }
 
     @Override
     public LongWritable getCurrentKey() {
-        return new LongWritable(indexArray.get(doc_num - 1));
+
+        return new LongWritable(indexArray.get(pos));
     }
 
     @Override
@@ -111,7 +112,8 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
 
     @Override
     public float getProgress() {
-        return (float) (doc_num ) / n_files;
+
+        return (float) pos / end;
     }
 
     @Override
