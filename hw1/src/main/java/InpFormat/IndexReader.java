@@ -18,7 +18,7 @@ public class IndexReader {
         List<Integer> al = new ArrayList<>((int)size);
 
         for (int i = 0; i < size; i++) {
-            al.add(indexFile.readInt());
+            al.add(in.readInt());
         }
         return al;
     }
