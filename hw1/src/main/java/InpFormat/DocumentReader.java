@@ -27,13 +27,13 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     FSDataInputStream input_file;
     Text value;
     List<Integer> indexArray;
-    byte[] input_arr;
-    byte[] result;
     int pos;
     long end;
     long start_file;
-    long max_doc = 5000000;
-    static long maxBufferSize = 150000*10;
+    long maxDocLength = 5000000;
+    byte[] inputArray = new byte[(int) maxDocLength];
+    byte[] result = new byte[(int) maxDocLength ];
+    //static long maxBufferSize = 150000*10;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -47,11 +47,6 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FSDataInputStream input_index = fs.open(new Path(path.getParent(), index_file));
 
-        prepare_index(fsplit, path, fs, input_index);
-
-    }
-
-    private void prepare_index(FileSplit fsplit, Path path, FileSystem fs, FSDataInputStream input_index) throws IOException {
         IndexReader reader = new IndexReader();
 
         indexArray = reader.ReadIndex(input_index);
@@ -68,9 +63,9 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
         input_file = fs.open(path);
         input_file.seek(offset);
 
-        input_arr = new byte[(int) max_doc];
-        result = new byte[(int) max_doc * 20];//?
+
     }
+
 
     @Override
     public boolean nextKeyValue() throws IOException {
@@ -78,19 +73,19 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
             return false;
         try {
 
-            input_file.readFully(input_arr, 0, indexArray.get(pos));
+            input_file.readFully(inputArray, 0, indexArray.get(pos));
         } catch (IOException e) {
             e.printStackTrace();
         }
         Inflater decompresser = new Inflater();
-        decompresser.setInput(input_arr, 0, indexArray.get(pos));
+        decompresser.setInput(inputArray, 0, indexArray.get(pos));
         int res_len = 0;
-        try {
-            if ((res_len = decompresser.inflate(result)) > maxBufferSize)
-                System.out.println("decompress error");
-        } catch (DataFormatException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            if ((res_len = decompresser.inflate(result)) > maxBufferSize)
+//                System.out.println("decompress error");
+//        } catch (DataFormatException e) {
+//            e.printStackTrace();
+//        }
         decompresser.end();
         value = new Text (new String(result, 0, res_len, "UTF-8"));
         pos++;
@@ -100,13 +95,11 @@ public class DocumentReader  extends RecordReader<LongWritable, Text> {
     @Override
     public LongWritable getCurrentKey() {
 
-        return new LongWritable(indexArray.get(pos));
+        return new LongWritable(indexArray.get(pos-1));
     }
 
     @Override
     public Text getCurrentValue() throws IOException {
-//            System.out.println(value);
-//            throw new IOException(value.toString());
         return value;
     }
 
